@@ -105,9 +105,9 @@ class PostURLTests(TestCase):
     def test_non_author_post_edit_redirects_correctly(self):
         """Редирект не автора поста происходит правильно"""
         response = self.authorized_non_author_client.get(
-            '/author/2/edit/', follow=True)
+            '/author/2/edit/')
         self.assertRedirects(
-            response, ('/auth/login/'))
+            response, ('/author/2/'))
 
     def test_server_return_404(self):
         """Несуществующая страница возвращает 404"""
