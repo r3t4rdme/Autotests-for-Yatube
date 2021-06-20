@@ -69,12 +69,19 @@ def new_post(request):
         'action_name': action_name})
 
 
+@login_required
 def post_edit(request, username, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    profile = get_object_or_404(User, username=username)
+    post = get_object_or_404(Post, pk=post_id, author=profile)
+    if request.user != profile:
+        return redirect('post', username=username, post_id=post_id)
     if request.user == post.author:
         action_name = 'Редактировать запись'
         if request.method == "POST":
-            form = PostForm(request.POST, instance=post)
+            form = PostForm(
+                request.POST or None,
+                files=request.FILES or None,
+                instance=post)
             if form.is_valid():
                 post = form.save(commit=False)
                 post.author = request.user
@@ -88,3 +95,16 @@ def post_edit(request, username, post_id):
             'action_name': action_name})
     else:
         return redirect('/auth/login')
+
+
+def page_not_found(request, exception):
+    return render(
+        request,
+        "misc/404.html",
+        {"path": request.path},
+        status=404
+    )
+
+
+def server_error(request):
+    return render(request, "misc/500.html", status=500)

@@ -1,4 +1,5 @@
 {% extends 'misc/base.html' %}
+{% load thumbnail %}
 
 {% block content %}
 <title>Записи сообщества {{ group.title }} | Yatube</title>
@@ -12,6 +13,10 @@
     {% for post in page %}
       <!-- Начало блока с отдельным постом -->
       <div class="card mb-3 mt-1 shadow-sm">
+        {% load thumbnail %}
+        {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+          <img class="card-img" src="{{ im.url }}">
+        {% endthumbnail %}
         <div class="card-body">
           <p class="card-text">
             <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->

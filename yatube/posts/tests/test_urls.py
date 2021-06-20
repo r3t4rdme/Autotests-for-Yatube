@@ -108,3 +108,12 @@ class PostURLTests(TestCase):
             '/author/2/edit/', follow=True)
         self.assertRedirects(
             response, ('/auth/login/'))
+
+    def test_server_return_404(self):
+        """Несуществующая страница возвращает 404"""
+        response = self.guest_client.get(
+            '/exhaust/'
+        )
+        self.assertEqual(
+            response.status_code, 404,
+            'Несуществующая страница возвращает ошибочный код')
