@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
+from django.test import Client, TestCase
+from django.urls.base import reverse
 
-from ..models import Post, Group
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -35,9 +36,9 @@ class PostURLTests(TestCase):
         )
         self.posts_urls = {
             'posts/index.html': '/',
-            'posts/group.html': '/group/test-slug/',
-            'posts/profile.html': '/leo/',
-            'posts/post.html': '/leo/2/'
+            'posts/group.html': f'/group/{PostURLTests.test_group.slug}/',
+            'posts/profile.html': f'/{PostURLTests.leo.username}/',
+            'posts/post.html': f'/{PostURLTests.leo.username}/1/'
 
         }
 
@@ -58,7 +59,12 @@ class PostURLTests(TestCase):
 
     def test_edit_post_uses_correct_template(self):
         """Url-адрес edit_post использует соответствующий шаблон"""
-        response = self.authorized_client.get('/author/2/edit/')
+        response = self.authorized_client.get(
+            reverse('post_edit', kwargs={
+                'username': f'{self.post_author.username}',
+                'post_id': f'{self.test_post.id}'
+            }),
+        )
         self.assertTemplateUsed(
             response, 'posts/new.html', 'Некорректный шаблон new_post'
         )
@@ -86,26 +92,45 @@ class PostURLTests(TestCase):
 
     def test_post_author_access(self):
         """Доступ к редактированию поста имеет только автор"""
-        response = self.authorized_client.get('/author/2/edit/')
+        response = self.authorized_client.get(
+            reverse('post_edit', kwargs={
+                'username': f'{self.post_author.username}',
+                'post_id': f'{self.test_post.id}'
+            }),
+        )
         self.assertEqual(
             response.status_code, 200, 'Автор поста не имеет доступа к посту')
 
     def test_not_post_author_access(self):
         """Не автор не имеет доступа к редактированию поста"""
-        response = self.authorized_non_author_client.get('/author/2/edit/')
+        response = self.authorized_non_author_client.get(
+            reverse('post_edit', kwargs={
+                'username': f'{self.post_author.username}',
+                'post_id': f'{self.test_post.id}'
+            }),
+        )
         self.assertEqual(
             response.status_code, 302, 'Не автор поста имеет доступ к посту')
 
     def test_guest_client_access(self):
         """Гостевой клиент не имеет доступа к редактированию поста"""
-        response = self.guest_client.get('/author/2/edit/')
+        response = self.guest_client.get(
+            reverse('post_edit', kwargs={
+                'username': f'{self.post_author.username}',
+                'post_id': f'{self.test_post.id}'
+            }),
+        )
         self.assertEqual(
             response.status_code, 302, 'Гостевой клиент имеет доступ к посту')
 
     def test_non_author_post_edit_redirects_correctly(self):
         """Редирект не автора поста происходит правильно"""
         response = self.authorized_non_author_client.get(
-            '/author/2/edit/')
+            reverse('post_edit', kwargs={
+                'username': f'{self.post_author.username}',
+                'post_id': f'{self.test_post.id}'
+            }),
+        )
         self.assertRedirects(
             response, ('/author/2/'))
 

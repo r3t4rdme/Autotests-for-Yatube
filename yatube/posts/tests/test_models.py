@@ -20,7 +20,7 @@ class GroupModelTest(TestCase):
         """Метод __str__ возвращает название группы"""
         test_group = GroupModelTest.test_group
         str_title = test_group.__str__()
-        self.assertEqual(test_group.title, str_title, 'zhopa')
+        self.assertEqual(test_group.title, str_title, 'Ошибка метода str')
 
 
 class PostModelTest(TestCase):

@@ -1,8 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 
-from ..models import Post
+from ..models import Post, Group
 
 User = get_user_model()
 
@@ -12,46 +12,69 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.leo = User.objects.create(username='leo')
-        Post.objects.create(
+        cls.test_group = Group.objects.create(
+            title='Test Group',
+            slug='test-slug',
+            description='Test group for test'
+        )
+        cls.test_post = Post.objects.create(
             text='Тестовый текст',
-            author=cls.leo
+            author=cls.leo,
+            group=cls.test_group
         )
         cls.post_author_client = Client()
         cls.post_author_client.force_login(cls.leo)
 
     def setUp(self):
-        self.leo_test = User.objects.create_user(username='leo_test')
+        self.petr = User.objects.create_user(username='petr')
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.leo_test)
+        self.authorized_client.force_login(self.petr)
 
     def test_new_post_created(self):
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст из формы',
-            'author': self.leo_test
+            'group': PostCreateFormTests.test_group.id
         }
         response = self.authorized_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse('index'))
-        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertRedirects(
+            response, reverse('index'))
+        self.assertEqual(
+            Post.objects.count(), posts_count + 1)
+        self.assertTrue(
+            Post.objects.filter(
+                text='Тестовый текст',
+                author=PostCreateFormTests.leo,
+                group=PostCreateFormTests.test_group
+            ), 'Ошибка в содержании поста'
+        )
 
     def test_post_edited(self):
         form_data = {
             'text': 'Измененный текст',
-            'author': self.leo_test
         }
         editing = self.post_author_client.post(
-            '/leo/1/edit/',
+            reverse('post_edit', kwargs={
+                'username': PostCreateFormTests.leo,
+                'post_id': PostCreateFormTests.test_post.id
+            }),
             data=form_data,
             follow=True
         )
-        after_edit_response = self.post_author_client.get('/leo/1/')
+        after_edit_response = self.post_author_client.get(
+            reverse('post', kwargs={
+                'username': PostCreateFormTests.leo,
+                'post_id': PostCreateFormTests.test_post.id
+            }),
+        )
         work_post = after_edit_response.context.get('post')
         work_post_text = work_post.text
         self.assertRedirects(
-            editing, '/leo/1/')
+            editing, f'/{PostCreateFormTests.leo.username}/1/')
         self.assertEqual(
-            work_post_text, 'Измененный текст', 'Текст не изменился')
+            work_post_text,
+            'Измененный текст', 'lol')

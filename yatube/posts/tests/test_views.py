@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Post, Group
 from ..forms import PostForm
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -36,7 +36,7 @@ class PostsViewTests(TestCase):
             group=cls.test_group_two
         )
         cls.test_post_three = Post.objects.create(
-            text='test post group two',
+            text='test post group three',
             author=cls.Vasya,
             group=cls.test_group_two
         )
@@ -52,7 +52,8 @@ class PostsViewTests(TestCase):
             'posts/index.html': reverse('index'),
             'posts/new.html': reverse('new_post'),
             'posts/group.html': (
-                reverse('group_posts', kwargs={'slug': 'test-slug'})
+                reverse('group_posts', kwargs={
+                    'slug': f'{PostsViewTests.test_group.slug}'})
             ),
         }
 
@@ -77,7 +78,8 @@ class PostsViewTests(TestCase):
     def test_group_posts_show_correct_context(self):
         """Шаблон group_posts сформирован с правильным контекстом"""
         response = self.authorized_client.get(
-            reverse('group_posts', kwargs={'slug': 'test-slug'}))
+            reverse('group_posts', kwargs={
+                'slug': f'{PostsViewTests.test_group.slug}'}))
         first_object = response.context.get('page').object_list[0]
         post_text = first_object.text
         post_author = first_object.author.username
@@ -92,13 +94,22 @@ class PostsViewTests(TestCase):
         self.assertIsInstance(form, PostForm, 'Form value error')
 
     def test_post_edit_show_correct_context(self):
-        response = self.author_client.get('/leo/2/edit/')
+        response = self.author_client.get(
+            reverse('post_edit', kwargs={
+                'username': PostsViewTests.leo,
+                'post_id': PostsViewTests.test_post.id
+            }),
+        )
         form = response.context['form']
         self.assertIsInstance(form, PostForm, 'Form value error')
 
     def test_profile_context_show_correct_context(self):
         """Шаблон profile сформирован с правильным контекстом"""
-        response = self.authorized_client.get('/leo/')
+        response = self.authorized_client.get(
+            reverse('profile', kwargs={
+                'username': PostsViewTests.leo
+            }),
+        )
         response_objects = response.context.get('post')
         for posts in response_objects:
             with self.subTest(posts=posts):
@@ -108,12 +119,18 @@ class PostsViewTests(TestCase):
 
     def test_post_show_correct_context(self):
         """Страница одиночного поста отображает 1 пост"""
-        response = self.authorized_client.get('/leo/2/')
+        response = self.authorized_client.get(
+            reverse('post', kwargs={
+                'username': PostsViewTests.leo,
+                'post_id': PostsViewTests.test_post_two.id
+            })
+        )
         first_object = response.context.get('post')
         post_text = first_object.text
         post_author = first_object.author.username
         self.assertEqual(
-            post_text, 'test post group two', 'Контекст некорректен')
+            post_text, 'test post group two',
+            'Контекст некорректен')
         self.assertEqual(
             post_author, 'leo', 'Контекст отображается некоректно')
 
@@ -121,9 +138,11 @@ class PostsViewTests(TestCase):
         """Новый пост появляется в соответствующих местах"""
         response_index = self.guest_client.get(reverse('index'))
         response_group = self.guest_client.get(reverse(
-            'group_posts', kwargs={'slug': 'test-slug'}))
+            'group_posts', kwargs={
+                'slug': f'{PostsViewTests.test_group.slug}'}))
         response_group_two = self.guest_client.get(reverse(
-            'group_posts', kwargs={'slug': 'test-slug-two'}))
+            'group_posts', kwargs={
+                'slug': f'{PostsViewTests.test_group_two.slug}'}))
 
         index_post = response_index.context.get(
             'page').object_list[0]
@@ -137,7 +156,7 @@ class PostsViewTests(TestCase):
         test_group_two_post_text = test_group_two_post.text
 
         self.assertIn(
-            'test post group two',
+            'test post group three',
             index_post_text, 'Пост не появляется на главной странице')
         self.assertIn(
             index_post_text,
@@ -238,20 +257,23 @@ class PaginatorViewsTest(TestCase):
     def test_group_first_page_contains_twelve_records(self):
         """Paginator группы выводит заданное количество постов"""
         response = self.client.get(reverse(
-            'group_posts', kwargs={'slug': 'test-slug'}))
-        self.assertEqual(len(response.context.get('page').object_list), 12)
+            'group_posts', kwargs={
+                'slug': f'{PaginatorViewsTest.test_group.slug}'}))
+        self.assertEqual(len(response.context.get('page').object_list), 10)
 
     def test_group_second_page_contains_one_record(self):
         """Paginator группы выводит заданное количество постов"""
-        response = self.client.get('/group/test-slug/?page=2')
-        self.assertEqual(len(response.context.get('page').object_list), 1)
+        response = self.client.get(
+            f'/group/{PaginatorViewsTest.test_group.slug}/?page=2')
+        self.assertEqual(len(response.context.get('page').object_list), 3)
 
     def test_profile_first_page_contains_10_records(self):
         """Paginator профайла выводит заданное количество постов"""
-        response = self.client.get('/leo/')
+        response = self.client.get(f'/{PaginatorViewsTest.leo.username}/')
         self.assertEqual(len(response.context.get('page').object_list), 10)
 
     def test_profile_second_page_contains_2_records(self):
         """Paginator профайла выводит заданное количество постов"""
-        response = self.client.get('/leo/?page=2')
+        response = self.client.get(
+            f'/{PaginatorViewsTest.leo.username}/?page=2')
         self.assertEqual(len(response.context.get('page').object_list), 3)
