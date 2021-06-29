@@ -10,6 +10,7 @@ from .models import Group, Post
 from yatube.settings import POSTS_PER_PAGE
 
 User = get_user_model()
+POSTS_PER_PAGE = POSTS_PER_PAGE
 
 
 def index(request):
