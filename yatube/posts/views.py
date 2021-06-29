@@ -1,4 +1,4 @@
-from django.conf import settings
+from django.conf import settings  # noqa
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -83,7 +83,7 @@ def post_edit(request, username, post_id):
         files=request.FILES or None,
         instance=post)
     action_name = 'Редактировать запись'
-    
+
     if form.is_valid():
         form.save()
         return redirect('post', username=post.author, post_id=post.pk)
