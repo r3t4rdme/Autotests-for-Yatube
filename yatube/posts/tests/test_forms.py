@@ -36,7 +36,7 @@ class PostCreateFormTests(TestCase):
             'text': 'Текст из формы',
             'group': PostCreateFormTests.test_group.id
         }
-        response = self.authorized_client.post(
+        response = PostCreateFormTests.post_author_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True
@@ -47,7 +47,7 @@ class PostCreateFormTests(TestCase):
             Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
-                text='Тестовый текст',
+                text=form_data['text'],
                 author=PostCreateFormTests.leo,
                 group=PostCreateFormTests.test_group
             ), 'Ошибка в содержании поста'
@@ -74,7 +74,9 @@ class PostCreateFormTests(TestCase):
         work_post = after_edit_response.context.get('post')
         work_post_text = work_post.text
         self.assertRedirects(
-            editing, f'/{PostCreateFormTests.leo.username}/1/')
+            editing,
+            f'/{PostCreateFormTests.leo.username}'
+            f'/{PostCreateFormTests.test_post.id}/')
         self.assertEqual(
             work_post_text,
-            'Измененный текст', 'lol')
+            'Измененный текст', 'Текст поста не изменился')

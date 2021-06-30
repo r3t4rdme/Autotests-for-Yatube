@@ -38,7 +38,8 @@ class PostURLTests(TestCase):
             'posts/index.html': '/',
             'posts/group.html': f'/group/{PostURLTests.test_group.slug}/',
             'posts/profile.html': f'/{PostURLTests.leo.username}/',
-            'posts/post.html': f'/{PostURLTests.leo.username}/1/'
+            'posts/post.html':
+            f'/{PostURLTests.leo.username}/{PostURLTests.test_post_one.id}/'
 
         }
 

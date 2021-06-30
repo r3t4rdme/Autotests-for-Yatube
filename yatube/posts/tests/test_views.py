@@ -176,67 +176,13 @@ class PaginatorViewsTest(TestCase):
             slug='test-slug',
             description='test group for test'
         )
+        for i in range(12):
+            Post.objects.create(
+                text=f'test post #{i}',
+                author=cls.leo,
+                group=cls.test_group,
+            )
         cls.test_post_one = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_two = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_three = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_four = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_five = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_six = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_seven = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_eight = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_nine = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_ten = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_eleven = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_twelve = Post.objects.create(
-            text='test post',
-            author=cls.leo,
-            group=cls.test_group
-        )
-        cls.test_post_thirteen = Post.objects.create(
             text='test post',
             author=cls.leo,
             group=cls.test_group
